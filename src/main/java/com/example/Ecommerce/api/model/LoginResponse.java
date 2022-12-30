@@ -9,4 +9,6 @@ public class LoginResponse {
 
     private String Jwt;
     private String Username;
+    private Boolean success;
+    private String failureReason;
 }
