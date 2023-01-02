@@ -38,6 +38,10 @@ public class AppUser {
     @Column(name = "create_time", nullable = false)
     private LocalDateTime createTime;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Address> addresses = new ArrayList<>();
+
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private Role role;
