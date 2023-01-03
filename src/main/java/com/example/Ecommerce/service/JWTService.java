@@ -25,7 +25,8 @@ public class JWTService {
     private Algorithm algorithm;
 
     private final static String USERNAME_KEY = "USERNAME";
-    private final static String EMAIL_KEY = "EMAIL";
+    private final static String VERIFICATION_EMAIL_KEY = "VERIFICATION_EMAIL";
+    private final static String RESET_PASSWORD_EMAIL_KEY = "RESET_PASSWORD_EMAIL";
 
     @PostConstruct
     public void postConstruct(){
@@ -40,10 +41,21 @@ public class JWTService {
     }
 
     public String generateVerificationJWT(AppUser appUser){
-        return JWT.create().withClaim(EMAIL_KEY, appUser.getEmail())
+        return JWT.create().withClaim(VERIFICATION_EMAIL_KEY, appUser.getEmail())
                 .withExpiresAt(new Date(System.currentTimeMillis() + ( 1000* expiryInSeconds)))
                 .withIssuer(issuer)
                 .sign(algorithm);
+    }
+    public String generatePasswordResetJWT(AppUser appUser){
+        return JWT.create().withClaim(RESET_PASSWORD_EMAIL_KEY, appUser.getUsername())
+                .withExpiresAt(new Date(System.currentTimeMillis() + ( 1000* 60 * 30)))
+                .withIssuer(issuer)
+                .sign(algorithm);
+    }
+
+    public String getResetPasswordEmail(String token){
+        DecodedJWT jwt = JWT.require(algorithm).withIssuer(issuer).build().verify(token);
+        return jwt.getClaim(RESET_PASSWORD_EMAIL_KEY).asString();
     }
 
     public String getUsername(String token){

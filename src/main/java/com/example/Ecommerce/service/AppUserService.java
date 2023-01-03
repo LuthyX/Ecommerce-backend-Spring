@@ -2,13 +2,16 @@ package com.example.Ecommerce.service;
 
 import com.example.Ecommerce.api.model.LoginBody;
 import com.example.Ecommerce.api.model.RegistrationBody;
+import com.example.Ecommerce.exception.EmailDoesNotExistException;
 import com.example.Ecommerce.exception.EmailFailureException;
 import com.example.Ecommerce.exception.UserAlreadyExistsException;
 import com.example.Ecommerce.exception.UserNotVerifiedException;
 import com.example.Ecommerce.model.AppUser;
+import com.example.Ecommerce.model.PasswordResetToken;
 import com.example.Ecommerce.model.Role;
 import com.example.Ecommerce.model.VerificationToken;
 import com.example.Ecommerce.repository.AppUserRepository;
+import com.example.Ecommerce.repository.PasswordResetTokenRepository;
 import com.example.Ecommerce.repository.VerificationTokenRepostiory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,13 +31,15 @@ public class AppUserService {
     private JWTService jwtService;
     private EmailService emailService;
     private VerificationTokenRepostiory verificationTokenRepostiory;
+    private PasswordResetTokenRepository passwordResetTokenRepository;
 
-    public AppUserService(AppUserRepository appUserRepository, EncryptionService encryptionService, JWTService jwtService, EmailService emailService, VerificationTokenRepostiory verificationTokenRepostiory){
+    public AppUserService(AppUserRepository appUserRepository, EncryptionService encryptionService, JWTService jwtService, EmailService emailService, VerificationTokenRepostiory verificationTokenRepostiory, PasswordResetTokenRepository passwordResetTokenRepository){
         this.appUserRepository = appUserRepository;
         this.encryptionService = encryptionService;
         this.jwtService = jwtService;
         this.emailService = emailService;
         this.verificationTokenRepostiory = verificationTokenRepostiory;
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
     }
 
     public AppUser registerUser (RegistrationBody registrationBody) throws UserAlreadyExistsException, EmailFailureException {
@@ -103,5 +108,23 @@ public class AppUserService {
         }
         return false;
     }
+
+    public void forgotEmail(String email) throws EmailDoesNotExistException, EmailFailureException {
+        Optional<AppUser> optapp = appUserRepository.findByEmail(email);
+        if (!optapp.isPresent()){
+            throw new EmailDoesNotExistException();
+        }
+        AppUser appUser = optapp.get();
+        String token = jwtService.generatePasswordResetJWT(appUser);
+        PasswordResetToken passwordResetToken = new PasswordResetToken();
+        passwordResetToken.setCreated_at(LocalDateTime.now());
+        passwordResetToken.setToken(token);
+        passwordResetToken.setUser(appUser);
+        emailService.sendPasswordResetEmail(passwordResetToken);
+        passwordResetTokenRepository.save(passwordResetToken);
+//        appUser.getPasswordResetTokens().add(passwordResetToken);
+    }
+
+    public void
 
 }

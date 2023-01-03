@@ -57,6 +57,11 @@ public class AppUser implements UserDetails {
    @JsonIgnore
     private List<VerificationToken> verificationTokens = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("id desc")
+    @JsonIgnore
+   private  List<PasswordResetToken> passwordResetTokens = new ArrayList<>();
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();
